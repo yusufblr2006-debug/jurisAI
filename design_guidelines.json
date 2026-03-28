@@ -1,0 +1,115 @@
+{
+  "project_name": "JurisAI",
+  "app_type": "react_native_expo",
+  "theme_archetype": "Archetype 4: Swiss & High-Contrast (Light Theme) infused with Archetype 1 Trust",
+  "color_palette": {
+    "background_primary": "#F0F2F5",
+    "background_secondary": "#FFFFFF",
+    "accent_primary": "#2563EB",
+    "accent_secondary": "#EFF6FF",
+    "nav_pill_background": "#111827",
+    "nav_pill_active": "#2563EB",
+    "text_primary": "#111827",
+    "text_secondary": "#6B7280",
+    "text_inverse": "#FFFFFF",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "border": "#E5E7EB",
+    "overlay_gradient_start": "rgba(17, 24, 39, 0.9)",
+    "overlay_gradient_end": "rgba(17, 24, 39, 0)"
+  },
+  "typography": {
+    "font_family_headings": "Manrope",
+    "font_family_body": "Work Sans",
+    "h1": { "fontSize": 32, "lineHeight": 40, "letterSpacing": -1, "fontWeight": "800" },
+    "h2": { "fontSize": 24, "lineHeight": 32, "letterSpacing": -0.5, "fontWeight": "700" },
+    "h3": { "fontSize": 18, "lineHeight": 28, "letterSpacing": -0.2, "fontWeight": "600" },
+    "body_large": { "fontSize": 16, "lineHeight": 24, "fontWeight": "400" },
+    "body_base": { "fontSize": 14, "lineHeight": 20, "fontWeight": "400" },
+    "label": { "fontSize": 12, "lineHeight": 16, "fontWeight": "600", "letterSpacing": 0.5, "textTransform": "uppercase" }
+  },
+  "layout_spacing_strategy": {
+    "global_padding": 16,
+    "card_padding": 20,
+    "border_radius_card": 24,
+    "border_radius_pill": 100,
+    "border_radius_button": 16,
+    "spacing_small": 8,
+    "spacing_medium": 16,
+    "spacing_large": 24,
+    "spacing_xlarge": 32,
+    "shadow_soft": {
+      "shadowColor": "#000000",
+      "shadowOffset": { "width": 0, "height": 4 },
+      "shadowOpacity": 0.05,
+      "shadowRadius": 12,
+      "elevation": 2
+    }
+  },
+  "components": {
+    "HeroCaseCard": {
+      "structure": "Full-width card, border radius 24px, overflow hidden. Main image is absolute full size.",
+      "overlay": "LinearGradient from bottom to top using color_palette.overlay_gradient_start to overlay_gradient_end. Opacity 80% at bottom to ensure white text is highly readable.",
+      "content": "Positioned at the bottom. Includes Lawyer name, case status, next hearing date in white text.",
+      "badge": "Risk assessment badge floating at top right (e.g., 'Low Risk' in green background, rounded)."
+    },
+    "FloatingDarkPillNavigation": {
+      "structure": "Absolute positioned at the bottom, centered. Width around 80% of screen.",
+      "style": "Background #111827, height 70px, border-radius 100px. Flex-direction row, justify-content space-evenly, align-items center.",
+      "active_state": "Active icon receives a circular background of #2563EB. Icons must be white/light grey."
+    },
+    "SuccessProbabilityRingChart": {
+      "structure": "SVG or Native Canvas Ring Chart. 82% filled.",
+      "colors": {
+        "track": "#E5E7EB",
+        "fill": "#2563EB"
+      },
+      "inner_content": "Large bold text '82%' centered in the ring, with 'Win Rate' below it."
+    },
+    "CaseProgressTimeline": {
+      "structure": "Vertical list with timeline nodes.",
+      "node_active": "Solid #2563EB circle (16px) with a line connecting to next. Text is primary color.",
+      "node_inactive": "Border only circle (border #E5E7EB). Text is secondary color.",
+      "line": "2px width, #E5E7EB for upcoming, #2563EB for completed."
+    },
+    "ChatInterface": {
+      "background": "#F0F2F5",
+      "bubble_user": "Background #2563EB, Text #FFFFFF, border-top-left-radius 20, border-top-right-radius 20, border-bottom-left-radius 20, border-bottom-right-radius 4.",
+      "bubble_ai": "Background #FFFFFF, Text #111827, border-top-left-radius 20, border-top-right-radius 20, border-bottom-left-radius 4, border-bottom-right-radius 20. Soft shadow.",
+      "input_area": "White container with rounded input, send button #2563EB."
+    },
+    "DocumentsList": {
+      "structure": "Row layout per item. Left icon (document outline), middle text (title & date), right action (download/view).",
+      "item_container": "Background #FFFFFF, border-radius 16px, padding 16px, soft shadow, margin-bottom 12px."
+    },
+    "LawyerMarketplaceCard": {
+      "structure": "Row layout. Left: Lawyer avatar (80x80 rounded). Right: Details (Name, Specialization, Rating, Experience). Action button 'Consult' in Electric Blue.",
+      "container": "Background #FFFFFF, border-radius 20px, padding 16px, soft shadow."
+    }
+  },
+  "media_urls": {
+    "hero_lawyer_1": "https://images.unsplash.com/photo-1742981365880-698cfb84492d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHw0fHxpbmRpYW4lMjBsYXd5ZXIlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3NzQ2ODU4MTJ8MA&ixlib=rb-4.1.0&q=85",
+    "hero_lawyer_2": "https://images.unsplash.com/photo-1725567865912-6561e9908ad9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBsYXd5ZXIlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3NzQ2ODU4MTJ8MA&ixlib=rb-4.1.0&q=85",
+    "document_preview": "https://images.unsplash.com/photo-1763729805496-b5dbf7f00c79?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwyfHxsZWdhbCUyMGRvY3VtZW50JTIwc2lnbmF0dXJlfGVufDB8fHx8MTc3NDY4NTgxM3ww&ixlib=rb-4.1.0&q=85"
+  },
+  "testing_attributes": {
+    "usage": "Add testID prop to all interactive and important elements in React Native (e.g., testID='nav-home-tab').",
+    "examples": [
+      "testID='hero-case-card'",
+      "testID='success-probability-chart'",
+      "testID='chat-input-field'",
+      "testID='send-message-button'"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "This is a React Native Expo application. Use 'StyleSheet' or standard React Native styles. If NativeWind is configured, you may use Tailwind classes.",
+    "Background color of the main ScrollView/View MUST be #F0F2F5 (Light Grey).",
+    "The Floating Bottom Navigation MUST be a dark pill (#111827) with rounded-full borders, positioned absolutely at the bottom with z-index. The active tab gets an Electric Blue (#2563EB) circular background behind the icon.",
+    "For the Hero Case Card, use an 'ImageBackground' or absolute positioned 'Image' with a 'LinearGradient' from expo-linear-gradient overlaid on top to ensure text readability.",
+    "The Success Probability chart should be implemented as a circular progress ring. The arc must hit exactly 82%.",
+    "Ensure all card elements use soft shadow styling (elevation: 2 on Android, shadowOpacity: 0.05 on iOS) and have a #FFFFFF background with large border radii (16px to 24px).",
+    "Implement the Chat Interface with user bubbles in Electric Blue (#2563EB) and AI bubbles in White (#FFFFFF).",
+    "DO NOT use Inter font for headings. Use Manrope for headings and Work Sans for body text.",
+    "Ensure to use testID instead of data-testid since this is React Native."
+  ]
+}
