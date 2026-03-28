@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadow } from '../../src/utils/theme';
 import { api } from '../../src/utils/api';
 import FloatingNav from '../../src/components/FloatingNav';
+import EmergencyButton from '../../src/components/EmergencyButton';
 import HeroCaseCard from '../../src/components/HeroCaseCard';
 import CaseProgress from '../../src/components/CaseProgress';
 import SuccessRing from '../../src/components/SuccessRing';
@@ -83,6 +84,18 @@ export default function HomeScreen() {
         {/* Greeting */}
         <Text style={styles.greetingSub}>Hello, User</Text>
         <Text style={styles.greetingMain}>{greeting}</Text>
+
+        {/* Emergency Banner */}
+        <TouchableOpacity testID="emergency-banner" style={styles.emergencyBanner} onPress={() => router.push('/emergency' as any)} activeOpacity={0.8}>
+          <View style={styles.emergencyIcon}>
+            <Ionicons name="shield" size={18} color="#FFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.emergencyTitle}>Emergency Legal Aid</Text>
+            <Text style={styles.emergencySub}>Know your rights instantly</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
 
         {/* AI CTA Banner */}
         <TouchableOpacity testID="ai-engine-cta" style={styles.aiCta} onPress={() => router.push('/ai-engine' as any)} activeOpacity={0.8}>
@@ -222,6 +235,7 @@ export default function HomeScreen() {
       <FloatingNav activeTab="home" onTabPress={(tab) => {
         if (tab !== 'home') router.push(`/(tabs)/${tab}` as any);
       }} />
+      <EmergencyButton />
     </SafeAreaView>
   );
 }
@@ -350,4 +364,15 @@ const styles = StyleSheet.create({
   aiCtaText: {},
   aiCtaTitle: { fontSize: 16, fontWeight: '700', color: Colors.textInverse },
   aiCtaSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  emergencyBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#DC2626', borderRadius: Radius.xl,
+    padding: 14, marginBottom: 10,
+  },
+  emergencyIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
+  },
+  emergencyTitle: { fontSize: 14, fontWeight: '700', color: '#FFF' },
+  emergencySub: { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
 });

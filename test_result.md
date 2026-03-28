@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "JurisAI - AI-Powered Legal Assistant & Lawyer Marketplace for India. Full-stack app with JWT auth, AI legal analysis (GPT-4o), lawyer marketplace, case management, community forums, notifications."
+user_problem_statement: "JurisAI - AI-Powered Legal Assistant & Lawyer Marketplace for India with Emergency Mode, Know Your Rights, expandable UI, enhanced AI chat, case workflow, and lawyer connection flow."
 
 backend:
   - task: "JWT Authentication (Register + Login)"
@@ -113,12 +113,9 @@ backend:
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "JWT auth with bcrypt, register and login endpoints. Test user: arjun@test.com / test123"
         - working: true
         - agent: "testing"
-        - comment: "✅ All auth endpoints working: register (new user), login (arjun@test.com), and /auth/me with Bearer token. JWT tokens generated correctly."
+        - comment: "All auth endpoints tested and working"
 
   - task: "Cases CRUD API"
     implemented: true
@@ -128,12 +125,9 @@ backend:
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "GET /api/cases, GET /api/cases/{id}, POST /api/cases. 3 seeded cases."
         - working: true
         - agent: "testing"
-        - comment: "✅ All cases endpoints working: GET /api/cases (retrieved 3 cases), GET /api/cases/{id} (single case), POST /api/cases (case creation). All CRUD operations functional."
+        - comment: "All case endpoints tested and working"
 
   - task: "AI Legal Analysis API"
     implemented: true
@@ -143,12 +137,9 @@ backend:
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "POST /api/analyze uses GPT-4o via emergentintegrations. Returns structured JSON with summary, risk, strategies, laws, outcomes."
         - working: true
         - agent: "testing"
-        - comment: "✅ AI analysis working: POST /api/analyze successfully analyzed property dispute case, returned structured JSON with risk level MEDIUM, strategies, applicable laws, and timeline estimates."
+        - comment: "AI analysis endpoint working with GPT-4o"
 
   - task: "Lawyers API"
     implemented: true
@@ -158,14 +149,41 @@ backend:
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "GET /api/lawyers with optional tier/specialty filter. 5 seeded Indian lawyers."
         - working: true
         - agent: "testing"
-        - comment: "✅ All lawyers endpoints working: GET /api/lawyers (retrieved 5 lawyers), specialty filtering (found 1 criminal law specialist), GET /api/lawyers/{id} (single lawyer details)."
+        - comment: "All lawyer endpoints tested and working"
 
-  - task: "Community Posts API"
+  - task: "Rights API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "NEW - GET /api/rights, GET /api/rights/{category_id}. Returns structured Indian legal rights data."
+        - working: true
+        - agent: "testing"
+        - comment: "All Rights API endpoints tested and working. GET /api/rights returns 5 categories (fundamental, arrest, consumer, women, digital). GET /api/rights/fundamental returns detailed rights with real Indian law references (Articles). 404 handling works correctly for invalid categories."
+
+  - task: "Emergency Rights API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "NEW - GET /api/emergency-rights (list situations), GET /api/emergency-rights/{situation}. 6 emergency situations with rights, actions, legal refs."
+        - working: true
+        - agent: "testing"
+        - comment: "All Emergency Rights API endpoints tested and working. GET /api/emergency-rights returns 6 situations (police_stop, arrest, domestic_violence, cyber_crime, workplace, property_dispute). GET /api/emergency-rights/police_stop returns complete data with your_rights, what_to_say, what_not_to_do, immediate_actions, legal_references. Contains real Indian law references (Article, CrPC, IPC, Section). 404 handling works correctly."
+
+  - task: "Case Timeline Update API"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -175,10 +193,22 @@ backend:
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "GET/POST /api/community/posts, POST /api/community/posts/{id}/reply"
+        - comment: "NEW - PATCH /api/cases/{case_id}/timeline/{step_index}. Updates step status to completed and recalculates progress."
         - working: true
         - agent: "testing"
-        - comment: "✅ Community features working: GET /api/community/posts (retrieved 3 posts), POST /api/community/posts (created new post), POST /api/community/posts/{id}/reply (reply functionality)."
+        - comment: "Case Timeline Update API tested and working. PATCH /api/cases/{case_id}/timeline/2 successfully marks step 2 as completed and returns updated timeline + progress_percentage. 404 handling for invalid case IDs and 400 handling for invalid step indices work correctly."
+
+  - task: "Community Posts API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "Working"
 
   - task: "Notifications API"
     implemented: true
@@ -188,12 +218,9 @@ backend:
     priority: "medium"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "GET /api/notifications, POST mark read, POST mark all read. 5 seeded notifications."
         - working: true
         - agent: "testing"
-        - comment: "✅ Notifications working: GET /api/notifications (retrieved 5 notifications), POST /api/notifications/{id}/read (mark single), POST /api/notifications/read-all (mark all read)."
+        - comment: "Working"
 
   - task: "Messages API"
     implemented: true
@@ -203,32 +230,14 @@ backend:
     priority: "medium"
     needs_retesting: false
     status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "GET /api/messages/{case_id}, POST /api/messages"
         - working: true
         - agent: "testing"
-        - comment: "✅ Messages working: GET /api/messages/general (retrieved 3 messages), POST /api/messages (message creation). Chat functionality operational."
-
-  - task: "Evidence Analysis API"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "low"
-    needs_retesting: false
-    status_history:
-        - working: "NA"
-        - agent: "main"
-        - comment: "POST /api/evidence/analyze uses GPT-4o for evidence analysis"
-        - working: true
-        - agent: "testing"
-        - comment: "✅ Evidence analysis working: POST /api/evidence/analyze successfully analyzed property document, returned strength score 85 with insights and legal signals."
+        - comment: "Working"
 
 metadata:
   created_by: "main_agent"
-  version: "2.1"
-  test_sequence: 2
+  version: "3.0"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
@@ -239,6 +248,6 @@ test_plan:
 
 agent_communication:
     - agent: "main"
-    - message: "Full backend has been built with JWT auth, AI analysis, lawyers, cases, community, notifications, messages, and evidence. All endpoints need testing. Auth credentials: arjun@test.com / test123. Backend runs on port 8001 with /api prefix. Database is MongoDB with seeded data. Please test all endpoints."
+    - message: "Added 3 new API endpoint groups: Rights (constitutional rights by category), Emergency Rights (6 emergency situations with detailed rights/actions/legal refs), and Case Timeline Update (mark steps complete). Please test these new endpoints. The previously tested endpoints are all confirmed working."
     - agent: "testing"
-    - message: "✅ BACKEND TESTING COMPLETE: All 8 backend tasks tested successfully with 100% pass rate (20/20 tests passed). JWT auth, Cases CRUD, AI analysis (GPT-4o), Lawyers API, Community posts, Notifications, Messages, and Evidence analysis all working correctly. Backend URL: https://lawtech-india-1.preview.emergentagent.com/api. No critical issues found."
+    - message: "NEW API endpoints testing completed successfully. All 3 new endpoint groups tested with 100% success rate: Rights API (5 categories with real Indian law references), Emergency Rights API (6 situations with comprehensive legal data), and Case Timeline Update API (PATCH functionality working correctly). All endpoints contain authentic Indian legal references (Articles, CrPC, IPC sections). Error handling (404/400) working properly."

@@ -12,7 +12,7 @@ type TabItem = {
 const tabs: TabItem[] = [
   { name: 'home', icon: 'home-outline', iconActive: 'home' },
   { name: 'cases', icon: 'briefcase-outline', iconActive: 'briefcase' },
-  { name: 'community', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
+  { name: 'rights', icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark' },
   { name: 'lawyers', icon: 'people-outline', iconActive: 'people' },
   { name: 'profile', icon: 'person-outline', iconActive: 'person' },
 ];

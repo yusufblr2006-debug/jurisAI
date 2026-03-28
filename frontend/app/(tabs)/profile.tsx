@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Shadow } from '../../src/utils/theme';
 import { api } from '../../src/utils/api';
 import FloatingNav from '../../src/components/FloatingNav';
+import EmergencyButton from '../../src/components/EmergencyButton';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -98,6 +99,26 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         ))}
 
+        {/* Case History */}
+        <Text style={styles.sectionLabel}>CASE HISTORY</Text>
+        {cases.length > 0 ? cases.slice(0, 3).map((c: any, i: number) => {
+          const riskColor = c.risk_level === 'HIGH' ? '#DC2626' : c.risk_level === 'LOW' ? '#16A34A' : '#D97706';
+          return (
+            <TouchableOpacity key={i} style={styles.caseHistoryItem}
+              onPress={() => router.push({ pathname: '/case-detail', params: { id: c.id } } as any)}>
+              <View style={styles.caseHistoryLeft}>
+                <Text style={styles.caseHistoryTitle} numberOfLines={1}>{c.title}</Text>
+                <Text style={styles.caseHistoryMeta}>{c.status} • {c.category}</Text>
+              </View>
+              <View style={[styles.riskDot, { backgroundColor: riskColor }]} />
+            </TouchableOpacity>
+          );
+        }) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No cases yet</Text>
+          </View>
+        )}
+
         {/* Logout */}
         <TouchableOpacity testID="logout-btn" style={styles.logoutBtn} onPress={() => router.replace('/')}>
           <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
@@ -109,6 +130,7 @@ export default function ProfileScreen() {
       <FloatingNav activeTab="profile" onTabPress={(tab) => {
         if (tab !== 'profile') router.push(`/(tabs)/${tab}` as any);
       }} />
+      <EmergencyButton />
     </View>
   );
 }
@@ -137,4 +159,14 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '700', color: Colors.textInverse },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, paddingVertical: 14, backgroundColor: '#FEE2E2', borderRadius: Radius.xl },
   logoutText: { fontSize: 15, fontWeight: '600', color: Colors.danger },
+  caseHistoryItem: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl, padding: 14, marginBottom: 8, ...Shadow.soft,
+  },
+  caseHistoryLeft: { flex: 1 },
+  caseHistoryTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  caseHistoryMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  riskDot: { width: 10, height: 10, borderRadius: 5 },
+  emptyState: { backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl, padding: 24, alignItems: 'center' as const, marginBottom: 8 },
+  emptyText: { fontSize: 14, color: Colors.textSecondary },
 });

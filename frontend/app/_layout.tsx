@@ -14,6 +14,10 @@ export default function RootLayout() {
         <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ai-engine" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="analysis-result" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="emergency" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="emergency-rights" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="lawyer-detail" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="case-detail" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

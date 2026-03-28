@@ -106,4 +106,16 @@ export const api = {
     fetchJson(`${apiBase}/notifications/${id}/read`, { method: 'POST' }),
   markAllRead: () =>
     fetchJson(`${apiBase}/notifications/read-all`, { method: 'POST' }),
+
+  // Rights
+  getRights: () => fetchJson(`${apiBase}/rights`),
+  getRightsByCategory: (categoryId: string) => fetchJson(`${apiBase}/rights/${categoryId}`),
+
+  // Emergency Rights
+  getEmergencySituations: () => fetchJson(`${apiBase}/emergency-rights`),
+  getEmergencyRights: (situation: string) => fetchJson(`${apiBase}/emergency-rights/${situation}`),
+
+  // Case Timeline
+  updateCaseStep: (caseId: string, stepIndex: number) =>
+    fetchJson(`${apiBase}/cases/${caseId}/timeline/${stepIndex}`, { method: 'PATCH' }),
 };

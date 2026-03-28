@@ -113,7 +113,7 @@ export default function LawyersScreen() {
                   <Ionicons name="trophy" size={14} color={Colors.success} />
                   <Text style={styles.winRateText}>{lawyer.cases_won}/{lawyer.total_cases} won</Text>
                 </View>
-                <TouchableOpacity testID={`consult-${lawyer.id}`} style={styles.consultBtn}>
+                <TouchableOpacity testID={`consult-${lawyer.id}`} style={styles.consultBtn} onPress={() => router.push({ pathname: '/lawyer-detail', params: { id: lawyer.id } } as any)}>
                   <Text style={styles.consultBtnText}>Consult</Text>
                   <Ionicons name="arrow-forward" size={14} color={Colors.textInverse} />
                 </TouchableOpacity>

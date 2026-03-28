@@ -61,6 +61,8 @@ class JurisAITester:
                 response = self.session.post(url, json=data, headers=req_headers, timeout=30)
             elif method.upper() == "PUT":
                 response = self.session.put(url, json=data, headers=req_headers, timeout=30)
+            elif method.upper() == "PATCH":
+                response = self.session.patch(url, json=data, headers=req_headers, timeout=30)
             elif method.upper() == "DELETE":
                 response = self.session.delete(url, headers=req_headers, timeout=30)
             else:
@@ -351,6 +353,171 @@ class JurisAITester:
         else:
             self.log_result("Messages Create", False, f"Failed to create message (status: {status})", data)
 
+    def test_rights_list(self):
+        """Test getting list of rights categories"""
+        success, data, status = self.make_request("GET", "/rights")
+        
+        if success and isinstance(data, list) and len(data) == 5:
+            categories = [item.get("id") for item in data]
+            expected_categories = ["fundamental", "arrest", "consumer", "women", "digital"]
+            if all(cat in categories for cat in expected_categories):
+                self.log_result("Rights List", True, f"Retrieved {len(data)} rights categories: {', '.join(categories)}")
+                return data
+            else:
+                self.log_result("Rights List", False, f"Missing expected categories. Got: {categories}")
+                return data
+        else:
+            self.log_result("Rights List", False, f"Failed to get rights (status: {status})", data)
+            return []
+
+    def test_rights_get_category(self):
+        """Test getting specific rights category"""
+        # Test valid category
+        success, data, status = self.make_request("GET", "/rights/fundamental")
+        
+        if success and isinstance(data, dict) and data.get("id") == "fundamental":
+            rights_count = len(data.get("rights", []))
+            self.log_result("Rights Get Category (Valid)", True, f"Retrieved fundamental rights with {rights_count} rights")
+            
+            # Verify it contains real Indian law references
+            rights = data.get("rights", [])
+            if rights and any("Article" in right.get("reference", "") for right in rights):
+                self.log_result("Rights Content Validation", True, "Contains real Indian law references (Articles)")
+            else:
+                self.log_result("Rights Content Validation", False, "Missing Indian law references")
+        else:
+            self.log_result("Rights Get Category (Valid)", False, f"Failed to get fundamental rights (status: {status})", data)
+        
+        # Test invalid category
+        success, data, status = self.make_request("GET", "/rights/nonexistent")
+        
+        if not success and status == 404:
+            self.log_result("Rights Get Category (Invalid)", True, "Correctly returned 404 for nonexistent category")
+        else:
+            self.log_result("Rights Get Category (Invalid)", False, f"Should return 404 for invalid category, got {status}", data)
+
+    def test_emergency_rights_list(self):
+        """Test getting list of emergency situations"""
+        success, data, status = self.make_request("GET", "/emergency-rights")
+        
+        if success and isinstance(data, list) and len(data) == 6:
+            situations = [item.get("id") for item in data]
+            expected_situations = ["police_stop", "arrest", "domestic_violence", "cyber_crime", "workplace", "property_dispute"]
+            if all(sit in situations for sit in expected_situations):
+                self.log_result("Emergency Rights List", True, f"Retrieved {len(data)} emergency situations: {', '.join(situations)}")
+                return data
+            else:
+                self.log_result("Emergency Rights List", False, f"Missing expected situations. Got: {situations}")
+                return data
+        else:
+            self.log_result("Emergency Rights List", False, f"Failed to get emergency situations (status: {status})", data)
+            return []
+
+    def test_emergency_rights_get_situation(self):
+        """Test getting specific emergency situation"""
+        # Test valid situation
+        success, data, status = self.make_request("GET", "/emergency-rights/police_stop")
+        
+        if success and isinstance(data, dict):
+            required_fields = ["title", "your_rights", "what_to_say", "what_not_to_do", "immediate_actions", "legal_references"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if not missing_fields:
+                rights_count = len(data.get("your_rights", []))
+                legal_refs = data.get("legal_references", [])
+                
+                # Check for Indian law references
+                has_indian_law = any(any(term in ref for term in ["Article", "CrPC", "IPC", "Section"]) for ref in legal_refs)
+                
+                self.log_result("Emergency Rights Get Situation (Valid)", True, 
+                              f"Retrieved police_stop with {rights_count} rights and {len(legal_refs)} legal references")
+                
+                if has_indian_law:
+                    self.log_result("Emergency Rights Legal References", True, "Contains real Indian law references")
+                else:
+                    self.log_result("Emergency Rights Legal References", False, "Missing Indian law references")
+            else:
+                self.log_result("Emergency Rights Get Situation (Valid)", False, f"Missing required fields: {missing_fields}", data)
+        else:
+            self.log_result("Emergency Rights Get Situation (Valid)", False, f"Failed to get police_stop situation (status: {status})", data)
+        
+        # Test another valid situation
+        success, data, status = self.make_request("GET", "/emergency-rights/arrest")
+        
+        if success and isinstance(data, dict) and data.get("title") == "Arrest Situation":
+            self.log_result("Emergency Rights Get Arrest", True, "Retrieved arrest situation successfully")
+        else:
+            self.log_result("Emergency Rights Get Arrest", False, f"Failed to get arrest situation (status: {status})", data)
+        
+        # Test invalid situation
+        success, data, status = self.make_request("GET", "/emergency-rights/nonexistent")
+        
+        if not success and status == 404:
+            self.log_result("Emergency Rights Get Situation (Invalid)", True, "Correctly returned 404 for nonexistent situation")
+        else:
+            self.log_result("Emergency Rights Get Situation (Invalid)", False, f"Should return 404 for invalid situation, got {status}", data)
+
+    def test_case_timeline_update(self):
+        """Test updating case timeline steps"""
+        # First get a case to work with
+        cases_success, cases_data, cases_status = self.make_request("GET", "/cases")
+        
+        if not cases_success or not isinstance(cases_data, list) or not cases_data:
+            self.log_result("Case Timeline Update (Setup)", False, "No cases available for timeline testing")
+            return
+        
+        case_id = cases_data[0].get("id")
+        if not case_id:
+            self.log_result("Case Timeline Update (Setup)", False, "No case ID found")
+            return
+        
+        # Get the case details to check timeline
+        case_success, case_data, case_status = self.make_request("GET", f"/cases/{case_id}")
+        
+        if not case_success:
+            self.log_result("Case Timeline Update (Setup)", False, f"Failed to get case details (status: {case_status})")
+            return
+        
+        timeline = case_data.get("timeline", [])
+        if not timeline:
+            self.log_result("Case Timeline Update (Setup)", False, "Case has no timeline to test")
+            return
+        
+        # Test valid timeline update (step index 2)
+        success, data, status = self.make_request("PATCH", f"/cases/{case_id}/timeline/2")
+        
+        if success and isinstance(data, dict):
+            if "timeline" in data and "progress_percentage" in data:
+                updated_timeline = data.get("timeline", [])
+                progress = data.get("progress_percentage", 0)
+                
+                # Check if step 2 was marked as completed
+                if len(updated_timeline) > 2 and updated_timeline[2].get("status") == "completed":
+                    self.log_result("Case Timeline Update (Valid)", True, 
+                                  f"Step 2 marked as completed, progress: {progress}%")
+                else:
+                    self.log_result("Case Timeline Update (Valid)", False, "Step 2 not properly marked as completed")
+            else:
+                self.log_result("Case Timeline Update (Valid)", False, "Missing timeline or progress_percentage in response")
+        else:
+            self.log_result("Case Timeline Update (Valid)", False, f"Failed to update timeline (status: {status})", data)
+        
+        # Test invalid case ID
+        success, data, status = self.make_request("PATCH", "/cases/nonexistent/timeline/0")
+        
+        if not success and status == 404:
+            self.log_result("Case Timeline Update (Invalid Case)", True, "Correctly returned 404 for nonexistent case")
+        else:
+            self.log_result("Case Timeline Update (Invalid Case)", False, f"Should return 404 for invalid case, got {status}", data)
+        
+        # Test invalid step index
+        success, data, status = self.make_request("PATCH", f"/cases/{case_id}/timeline/99")
+        
+        if not success and status == 400:
+            self.log_result("Case Timeline Update (Invalid Step)", True, "Correctly returned 400 for invalid step index")
+        else:
+            self.log_result("Case Timeline Update (Invalid Step)", False, f"Should return 400 for invalid step index, got {status}", data)
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting JurisAI Backend API Tests")
@@ -402,6 +569,18 @@ class JurisAITester:
         # Test evidence analysis (low priority)
         print("\n📋 Testing Evidence Analysis APIs...")
         self.test_evidence_analysis()
+        
+        # Test NEW API endpoints (high priority)
+        print("\n📋 Testing NEW Rights APIs...")
+        self.test_rights_list()
+        self.test_rights_get_category()
+        
+        print("\n📋 Testing NEW Emergency Rights APIs...")
+        self.test_emergency_rights_list()
+        self.test_emergency_rights_get_situation()
+        
+        print("\n📋 Testing NEW Case Timeline Update API...")
+        self.test_case_timeline_update()
         
         # Print summary
         self.print_summary()

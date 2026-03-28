@@ -58,7 +58,7 @@ export default function CasesScreen() {
               <Text style={styles.emptyText}>No cases found</Text>
             </View>
           ) : filtered.map(c => (
-            <View key={c.id} testID={`case-card-${c.id}`} style={styles.caseCard}>
+            <TouchableOpacity key={c.id} testID={`case-card-${c.id}`} style={styles.caseCard} onPress={() => router.push({ pathname: '/case-detail', params: { id: c.id } } as any)} activeOpacity={0.7}>
               <View style={styles.caseHeader}>
                 <View style={styles.caseCategory}>
                   <Ionicons name="document-text" size={16} color={Colors.accent} />
@@ -91,7 +91,7 @@ export default function CasesScreen() {
                   <Text style={[styles.statusText, c.status === 'Active' ? styles.statusTextActive : styles.statusTextPending]}>{c.status}</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
         <View style={{ height: 100 }} />
