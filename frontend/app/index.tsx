@@ -17,18 +17,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'user' | 'lawyer'>('user');
+  const [barCouncil, setBarCouncil] = useState('');
+  const [enrollment, setEnrollment] = useState('');
+  const [aadhaarLast4, setAadhaarLast4] = useState('');
+  const [specialization, setSpecialization] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (isRegister && !name.trim()) { setError('Name is required'); return; }
     if (!email.trim() || !password.trim()) { setError('Email and password required'); return; }
+    if (isRegister && role === 'lawyer') {
+      if (!barCouncil.trim()) { setError('Bar Council Number is required'); return; }
+      if (!enrollment.trim()) { setError('Enrollment Number is required'); return; }
+      if (!aadhaarLast4.trim() || aadhaarLast4.length !== 4) { setError('Last 4 digits of Aadhaar required'); return; }
+    }
     setLoading(true);
     setError('');
     try {
       let data;
       if (isRegister) {
-        data = await api.register(name.trim(), email.trim().toLowerCase(), password, role);
+        const body: any = { name: name.trim(), email: email.trim().toLowerCase(), password, role };
+        if (role === 'lawyer') {
+          body.bar_council_number = barCouncil.trim();
+          body.enrollment_number = enrollment.trim();
+          body.aadhaar_last4 = aadhaarLast4.trim();
+          body.specialization = specialization.trim();
+        }
+        data = await api.register(body.name, body.email, body.password, body.role, body);
       } else {
         data = await api.login(email.trim().toLowerCase(), password);
       }
@@ -129,6 +145,35 @@ export default function LoginScreen() {
                   <Text style={[styles.roleBtnText, role === 'lawyer' && styles.roleBtnTextActive]}>Lawyer</Text>
                 </TouchableOpacity>
               </View>
+
+              {role === 'lawyer' && (
+                <>
+                  <View style={styles.lawyerFieldsHeader}>
+                    <Ionicons name="shield-checkmark" size={16} color={Colors.accent} />
+                    <Text style={styles.lawyerFieldsTitle}>Professional Credentials</Text>
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="ribbon-outline" size={20} color={Colors.textSecondary} />
+                    <TextInput style={styles.input} placeholder="Bar Council Number" placeholderTextColor={Colors.textSecondary} value={barCouncil} onChangeText={setBarCouncil} autoCapitalize="characters" />
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="document-text-outline" size={20} color={Colors.textSecondary} />
+                    <TextInput style={styles.input} placeholder="Enrollment Number" placeholderTextColor={Colors.textSecondary} value={enrollment} onChangeText={setEnrollment} autoCapitalize="characters" />
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="id-card-outline" size={20} color={Colors.textSecondary} />
+                    <TextInput style={styles.input} placeholder="Aadhaar (last 4 digits)" placeholderTextColor={Colors.textSecondary} value={aadhaarLast4} onChangeText={(t) => setAadhaarLast4(t.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="numeric" maxLength={4} />
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="school-outline" size={20} color={Colors.textSecondary} />
+                    <TextInput style={styles.input} placeholder="Specialization (e.g. Criminal Law)" placeholderTextColor={Colors.textSecondary} value={specialization} onChangeText={setSpecialization} />
+                  </View>
+                  <View style={styles.verifyNote}>
+                    <Ionicons name="information-circle" size={14} color={Colors.accent} />
+                    <Text style={styles.verifyNoteText}>Aadhaar and Bar Council credentials will be verified within 24 hours</Text>
+                  </View>
+                </>
+              )}
             </>
           )}
 
@@ -215,4 +260,14 @@ const styles = StyleSheet.create({
     marginTop: 12, paddingVertical: 8,
   },
   hintText: { fontSize: 12, color: Colors.accent },
+  lawyerFieldsHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginBottom: 10, marginTop: 4,
+  },
+  lawyerFieldsTitle: { fontSize: 13, fontWeight: '700', color: Colors.accent },
+  verifyNote: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: Colors.accentLight, borderRadius: Radius.lg, padding: 10, marginBottom: 12,
+  },
+  verifyNoteText: { fontSize: 11, color: Colors.accent, flex: 1 },
 });

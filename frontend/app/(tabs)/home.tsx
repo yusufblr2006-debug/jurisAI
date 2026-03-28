@@ -1,233 +1,216 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, SafeAreaView, RefreshControl, Image,
+  ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadow } from '../../src/utils/theme';
 import { api } from '../../src/utils/api';
 import FloatingNav from '../../src/components/FloatingNav';
 import EmergencyButton from '../../src/components/EmergencyButton';
-import HeroCaseCard from '../../src/components/HeroCaseCard';
-import CaseProgress from '../../src/components/CaseProgress';
-import SuccessRing from '../../src/components/SuccessRing';
 
-type TabName = 'Overview' | 'Documents' | 'Tasks';
+function SuccessRing({ pct, size = 110 }: { pct: number; size?: number }) {
+  const sw = 8; const r = (size - sw) / 2; const c = 2 * Math.PI * r;
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Svg width={size} height={size}>
+        <Circle cx={size/2} cy={size/2} r={r} stroke="#E5E7EB" strokeWidth={sw} fill="none" />
+        <Circle cx={size/2} cy={size/2} r={r} stroke={Colors.accent} strokeWidth={sw} fill="none"
+          strokeDasharray={`${c}`} strokeDashoffset={c - (pct/100)*c} strokeLinecap="round"
+          transform={`rotate(-90 ${size/2} ${size/2})`} />
+      </Svg>
+      <View style={{ position: 'absolute', width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: Colors.textPrimary }}>{pct}%</Text>
+        <Text style={{ fontSize: 11, color: Colors.textSecondary }}>Win Rate</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [cases, setCases] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabName>('Overview');
 
-  const fetchData = async () => {
+  const loadData = async () => {
     try {
-      const [casesData, docsData] = await Promise.all([api.getCases(), api.getDocuments()]);
-      setCases(casesData);
-      setDocuments(docsData);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+      const [c, n] = await Promise.all([api.getCases(), api.getNotifications()]);
+      setCases(c || []);
+      setNotifications(n || []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); setRefreshing(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { loadData(); }, []);
 
-  const activeCase = cases[0];
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning!' : hour < 17 ? 'Good afternoon!' : 'Good evening!';
+  const heroCase = cases[0];
+  const otherCases = cases.slice(1);
+  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.accent} />
-        </View>
-      </SafeAreaView>
+      <View style={[styles.safe, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.accent} />
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+    <View style={[styles.safe, { paddingTop: insets.top }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>JurisAI</Text>
+          <Text style={styles.subtitle}>Your Legal Assistant</Text>
+        </View>
+        <TouchableOpacity testID="notif-btn" style={styles.notifBtn} onPress={() => router.push('/notifications' as any)}>
+          <Ionicons name="notifications-outline" size={22} color={Colors.textPrimary} />
+          {unreadCount > 0 && <View style={styles.notifDot}><Text style={styles.notifDotText}>{unreadCount}</Text></View>}
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={Colors.accent} />}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />
-            </View>
-            <Text style={styles.logoText}>JurisAI</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <View style={styles.notifBadge}>
-              <TouchableOpacity testID="notif-btn" onPress={() => router.push('/notifications' as any)}>
-                <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
-                <View style={styles.notifDot} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>S</Text>
-            </View>
-          </View>
-        </View>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />}>
 
-        {/* Greeting */}
-        <Text style={styles.greetingSub}>Hello, User</Text>
-        <Text style={styles.greetingMain}>{greeting}</Text>
+        {/* Emergency + AI Banners */}
+        <TouchableOpacity testID="emergency-banner" style={styles.emergencyBanner} onPress={() => router.push('/emergency' as any)}>
+          <View style={styles.emergencyIcon}><Ionicons name="shield" size={16} color="#FFF" /></View>
+          <Text style={styles.emergencyText}>Emergency Legal Aid</Text>
+          <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
 
-        {/* Emergency Banner */}
-        <TouchableOpacity testID="emergency-banner" style={styles.emergencyBanner} onPress={() => router.push('/emergency' as any)} activeOpacity={0.8}>
-          <View style={styles.emergencyIcon}>
-            <Ionicons name="shield" size={18} color="#FFF" />
-          </View>
+        <TouchableOpacity testID="ai-cta" style={styles.aiCta} onPress={() => router.push('/ai-engine' as any)}>
+          <View style={styles.aiCtaIcon}><Ionicons name="sparkles" size={16} color="#FFF" /></View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.emergencyTitle}>Emergency Legal Aid</Text>
-            <Text style={styles.emergencySub}>Know your rights instantly</Text>
+            <Text style={styles.aiCtaTitle}>AI Legal Engine</Text>
+            <Text style={styles.aiCtaSub}>Get instant legal analysis</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="arrow-forward-circle" size={24} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
 
-        {/* AI CTA Banner */}
-        <TouchableOpacity testID="ai-engine-cta" style={styles.aiCta} onPress={() => router.push('/ai-engine' as any)} activeOpacity={0.8}>
-          <View style={styles.aiCtaLeft}>
-            <View style={styles.aiCtaIcon}>
-              <Ionicons name="sparkles" size={22} color={Colors.textInverse} />
-            </View>
-            <View style={styles.aiCtaText}>
-              <Text style={styles.aiCtaTitle}>AI Legal Engine</Text>
-              <Text style={styles.aiCtaSub}>Get instant legal analysis</Text>
-            </View>
-          </View>
-          <Ionicons name="arrow-forward-circle" size={28} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-
-        {/* Tabs */}
-        <View style={styles.tabRow}>
-          <TouchableOpacity testID="tab-search" style={styles.searchPill}>
-            <Ionicons name="search" size={18} color={Colors.textSecondary} />
-          </TouchableOpacity>
-          {(['Overview', 'Documents', 'Tasks'] as TabName[]).map(tab => (
-            <TouchableOpacity
-              key={tab}
-              testID={`tab-${tab.toLowerCase()}`}
-              style={[styles.tabPill, activeTab === tab && styles.tabPillActive]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {activeTab === 'Overview' && (
+        {/* Hero Case - Two Column Layout */}
+        {heroCase && (
           <>
-            {/* Hero Case Card */}
-            {activeCase && (
-              <HeroCaseCard
-                title={activeCase.title}
-                status={activeCase.status}
-                lawyerName={activeCase.assigned_lawyer}
-                caseNumber={activeCase.case_number}
-                riskLevel={activeCase.risk_level}
-                imageUrl="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600"
-              />
-            )}
+            <View style={styles.twoCol}>
+              {/* Left: Case Progress Timeline */}
+              <TouchableOpacity style={styles.progressCard} onPress={() => router.push({ pathname: '/case-detail', params: { id: heroCase.id } } as any)} activeOpacity={0.7}>
+                <View style={styles.progressHeader}>
+                  <View style={styles.progressIcon}><Ionicons name="checkmark-circle" size={16} color={Colors.accent} /></View>
+                  <Text style={styles.progressTitle} numberOfLines={1}>Case Progress</Text>
+                </View>
+                <Text style={styles.progressSummary}>
+                  {heroCase.timeline?.filter((t: any) => t.status === 'completed').length || 0} of {heroCase.timeline?.length || 0} Completed  <Text style={styles.progressPct}>{heroCase.progress_percentage}%</Text>
+                </Text>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressBarFill, { width: `${heroCase.progress_percentage}%` }]} />
+                </View>
+                {/* Timeline */}
+                {heroCase.timeline?.map((step: any, i: number) => {
+                  const done = step.status === 'completed';
+                  const isLast = i === (heroCase.timeline?.length || 0) - 1;
+                  return (
+                    <View key={i} style={styles.timelineRow}>
+                      <View style={styles.timelineLeft}>
+                        <View style={[styles.tlDot, done && styles.tlDotDone]}>
+                          {done && <Ionicons name="checkmark" size={10} color="#FFF" />}
+                        </View>
+                        {!isLast && <View style={[styles.tlLine, done && styles.tlLineDone]} />}
+                      </View>
+                      <View style={styles.timelineRight}>
+                        <Text style={[styles.tlStep, !done && styles.tlStepPending]}>{step.step}</Text>
+                        <Text style={styles.tlStatus}>{done ? 'Completed' : 'Pending'}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </TouchableOpacity>
 
-            {/* Bento Grid */}
-            <View style={styles.bentoGrid}>
-              <View style={styles.bentoLeft}>
-                {activeCase && <CaseProgress items={activeCase.timeline} totalSteps={activeCase.timeline?.length || 5} />}
-              </View>
-              <View style={styles.bentoRight}>
-                <SuccessRing percentage={activeCase?.success_probability || 72} />
+              {/* Right: Success Probability */}
+              <View style={styles.successCard}>
+                <View style={styles.successHeader}>
+                  <Text style={styles.successTitle}>Success{'\n'}Probability</Text>
+                  <View style={[styles.riskTag, {
+                    backgroundColor: heroCase.risk_level === 'HIGH' ? '#FEE2E2' : heroCase.risk_level === 'LOW' ? '#DCFCE7' : '#FEF3C7'
+                  }]}>
+                    <Text style={[styles.riskTagText, {
+                      color: heroCase.risk_level === 'HIGH' ? '#DC2626' : heroCase.risk_level === 'LOW' ? '#16A34A' : '#D97706'
+                    }]}>{heroCase.risk_level || 'Medium'}</Text>
+                  </View>
+                </View>
+                <SuccessRing pct={heroCase.success_probability || 72} />
+                {/* Evidence Scores */}
+                <View style={styles.evidenceList}>
+                  {[
+                    { label: 'Medical evi...', pct: 92 },
+                    { label: 'Witness sta...', pct: 56 },
+                    { label: 'Documenta...', pct: 84 },
+                  ].map((e, i) => (
+                    <View key={i} style={styles.evidenceRow}>
+                      <Text style={styles.evidenceLabel}>{e.label}</Text>
+                      <Text style={styles.evidencePct}>{e.pct}%</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
-
-            {/* Cases List */}
-            {cases.length > 1 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Other Cases</Text>
-                {cases.slice(1).map((c) => (
-                  <View key={c.id} style={styles.caseRow}>
-                    <View style={[styles.caseIcon, { backgroundColor: c.risk_level?.toUpperCase() === 'LOW' ? '#DCFCE7' : '#FEF3C7' }]}>
-                      <Ionicons name="document-text" size={18} color={c.risk_level?.toUpperCase() === 'LOW' ? Colors.success : Colors.warning} />
-                    </View>
-                    <View style={styles.caseInfo}>
-                      <Text style={styles.caseTitle} numberOfLines={1}>{c.title}</Text>
-                      <Text style={styles.caseSub}>{c.assigned_lawyer} • #{c.case_number}</Text>
-                    </View>
-                    <View style={[styles.riskPill, { backgroundColor: c.risk_level?.toUpperCase() === 'LOW' ? '#DCFCE7' : c.risk_level?.toUpperCase() === 'HIGH' ? '#FEE2E2' : '#FEF3C7' }]}>
-                      <Text style={[styles.riskPillText, { color: c.risk_level?.toUpperCase() === 'LOW' ? '#16A34A' : c.risk_level?.toUpperCase() === 'HIGH' ? '#DC2626' : '#D97706' }]}>
-                        {(c.risk_level || 'Medium').charAt(0).toUpperCase() + (c.risk_level || 'Medium').slice(1).toLowerCase()}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
           </>
         )}
 
-        {activeTab === 'Documents' && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
-                <Ionicons name="document-text" size={20} color={Colors.accent} />
-                <Text style={styles.sectionTitle}>Documents</Text>
-              </View>
-            </View>
-            {documents.map((doc) => (
-              <View key={doc.id} style={styles.docRow}>
-                <View style={styles.docIconCircle}>
-                  <Ionicons name="document" size={20} color={Colors.success} />
-                </View>
-                <View style={styles.docInfo}>
-                  <Text style={styles.docTitle} numberOfLines={1}>{doc.title}</Text>
-                  <Text style={styles.docSub}>{doc.file_type} • {doc.file_size} • {doc.uploaded_at}</Text>
-                </View>
-                <View style={styles.docActions}>
-                  <TouchableOpacity style={styles.docAction}>
-                    <Ionicons name="eye-outline" size={18} color={Colors.textSecondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.docAction}>
-                    <Ionicons name="download-outline" size={18} color={Colors.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
+        {/* Other Cases */}
+        {otherCases.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Other Cases</Text>
+            {otherCases.map((c: any) => {
+              const rl = (c.risk_level || 'MEDIUM').toUpperCase();
+              const riskColor = rl === 'HIGH' ? '#DC2626' : rl === 'LOW' ? '#16A34A' : '#D97706';
+              const riskBg = rl === 'HIGH' ? '#FEE2E2' : rl === 'LOW' ? '#DCFCE7' : '#FEF3C7';
+              const iconBg = rl === 'HIGH' ? '#FEF3C7' : '#DCFCE7';
+              const iconColor = rl === 'HIGH' ? '#D97706' : '#16A34A';
+              return (
+                <TouchableOpacity key={c.id} style={styles.caseRow} activeOpacity={0.7}
+                  onPress={() => router.push({ pathname: '/case-detail', params: { id: c.id } } as any)}>
+                  <View style={[styles.caseIcon, { backgroundColor: iconBg }]}>
+                    <Ionicons name="document-text" size={18} color={iconColor} />
+                  </View>
+                  <View style={styles.caseInfo}>
+                    <Text style={styles.caseTitle} numberOfLines={1}>{c.title}</Text>
+                    <Text style={styles.caseSub}>{c.assigned_lawyer} · #{c.case_number}</Text>
+                  </View>
+                  <View style={[styles.riskPill, { backgroundColor: riskBg }]}>
+                    <Text style={[styles.riskPillText, { color: riskColor }]}>
+                      {rl.charAt(0) + rl.slice(1).toLowerCase()}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </>
         )}
 
-        {activeTab === 'Tasks' && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Upcoming Tasks</Text>
-            {[
-              { title: 'Upload identity documents', due: 'Due Mar 30', icon: 'cloud-upload-outline' as const, urgent: true },
-              { title: 'Review case summary', due: 'Due Apr 5', icon: 'reader-outline' as const, urgent: false },
-              { title: 'Attend mediation session', due: 'Due Apr 15', icon: 'videocam-outline' as const, urgent: false },
-            ].map((task, i) => (
-              <View key={i} style={styles.taskRow}>
-                <View style={[styles.taskIcon, task.urgent && { backgroundColor: '#FEE2E2' }]}>
-                  <Ionicons name={task.icon} size={18} color={task.urgent ? Colors.danger : Colors.accent} />
-                </View>
-                <View style={styles.taskInfo}>
-                  <Text style={styles.taskTitle}>{task.title}</Text>
-                  <Text style={[styles.taskDue, task.urgent && { color: Colors.danger }]}>{task.due}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textSecondary} />
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickRow}>
+          {[
+            { icon: 'sparkles', label: 'AI Analysis', color: Colors.accent, route: '/ai-engine' },
+            { icon: 'shield-checkmark', label: 'My Rights', color: '#16A34A', route: '/(tabs)/rights' },
+            { icon: 'people', label: 'Lawyers', color: '#9333EA', route: '/(tabs)/lawyers' },
+            { icon: 'chatbubbles', label: 'Chat', color: '#EA580C', route: '/chat' },
+          ].map((q, i) => (
+            <TouchableOpacity key={i} style={styles.quickCard} onPress={() => router.push(q.route as any)}>
+              <View style={[styles.quickIcon, { backgroundColor: q.color + '15' }]}>
+                <Ionicons name={q.icon as any} size={20} color={q.color} />
               </View>
-            ))}
-          </View>
-        )}
+              <Text style={styles.quickLabel}>{q.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -236,143 +219,83 @@ export default function HomeScreen() {
         if (tab !== 'home') router.push(`/(tabs)/${tab}` as any);
       }} />
       <EmergencyButton />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bgPrimary },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md, paddingVertical: 12, backgroundColor: Colors.bgSecondary,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.textPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  greeting: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary },
+  subtitle: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
+  notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
+  notifDot: { position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
+  notifDotText: { fontSize: 10, fontWeight: '700', color: '#FFF' },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: Spacing.md, paddingTop: 12 },
+  emergencyBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#DC2626', borderRadius: Radius.lg, padding: 12, marginBottom: 8,
   },
-  logoText: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  notifBadge: { position: 'relative' },
-  notifDot: {
-    position: 'absolute', top: -2, right: -2,
-    width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.danger,
+  emergencyIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  emergencyText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#FFF' },
+  aiCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 12, marginBottom: 14,
   },
-  avatar: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center',
+  aiCtaIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  aiCtaTitle: { fontSize: 14, fontWeight: '700', color: '#FFF' },
+  aiCtaSub: { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
+  twoCol: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  progressCard: {
+    flex: 1, backgroundColor: Colors.bgSecondary, borderRadius: Radius.xxl,
+    padding: 14, ...Shadow.soft,
   },
-  avatarText: { fontSize: 14, fontWeight: '700', color: Colors.textInverse },
-  greetingSub: { fontSize: 14, color: Colors.textSecondary },
-  greetingMain: {
-    fontSize: 32, fontWeight: '800', color: Colors.textPrimary,
-    letterSpacing: -1, marginBottom: 16,
+  progressHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  progressIcon: { width: 24, height: 24, borderRadius: 12, backgroundColor: Colors.accentLight, alignItems: 'center', justifyContent: 'center' },
+  progressTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
+  progressSummary: { fontSize: 12, color: Colors.textSecondary, marginBottom: 6 },
+  progressPct: { fontWeight: '800', color: Colors.textPrimary },
+  progressBar: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, marginBottom: 12, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 2 },
+  timelineRow: { flexDirection: 'row', minHeight: 36 },
+  timelineLeft: { alignItems: 'center', width: 20, marginRight: 8 },
+  tlDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: '#D1D5DB', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF', zIndex: 1 },
+  tlDotDone: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
+  tlLine: { width: 2, flex: 1, backgroundColor: '#D1D5DB', marginVertical: 1 },
+  tlLineDone: { backgroundColor: '#16A34A' },
+  timelineRight: { flex: 1, paddingBottom: 4 },
+  tlStep: { fontSize: 12, fontWeight: '600', color: Colors.textPrimary },
+  tlStepPending: { color: Colors.textSecondary },
+  tlStatus: { fontSize: 10, color: Colors.textSecondary },
+  successCard: {
+    width: 150, backgroundColor: Colors.bgSecondary, borderRadius: Radius.xxl,
+    padding: 14, alignItems: 'center', ...Shadow.soft,
   },
-  tabRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20,
-  },
-  searchPill: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.bgSecondary, alignItems: 'center', justifyContent: 'center',
-    ...Shadow.soft,
-  },
-  tabPill: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.pill,
-    backgroundColor: Colors.bgSecondary, ...Shadow.soft,
-  },
-  tabPillActive: { backgroundColor: Colors.textPrimary },
-  tabText: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  tabTextActive: { color: Colors.textInverse },
-  bentoGrid: {
-    flexDirection: 'row', gap: 12, marginTop: 16,
-  },
-  bentoLeft: { flex: 1.2 },
-  bentoRight: { flex: 1 },
-  section: { marginTop: 20 },
-  sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionTitle: {
-    fontSize: 18, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12,
-  },
+  successHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', marginBottom: 8 },
+  successTitle: { fontSize: 13, fontWeight: '700', color: Colors.textPrimary, lineHeight: 17 },
+  riskTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  riskTagText: { fontSize: 10, fontWeight: '700' },
+  evidenceList: { width: '100%', marginTop: 10, gap: 4 },
+  evidenceRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  evidenceLabel: { fontSize: 11, color: Colors.textSecondary },
+  evidencePct: { fontSize: 11, fontWeight: '700', color: Colors.textPrimary },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: Colors.textPrimary, marginBottom: 10 },
   caseRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl,
-    padding: 16, marginBottom: 10, ...Shadow.soft, gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl, padding: 14, marginBottom: 8, ...Shadow.soft,
   },
-  caseIcon: {
-    width: 40, height: 40, borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  caseIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   caseInfo: { flex: 1 },
   caseTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
   caseSub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  riskPill: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill,
-  },
+  riskPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill },
   riskPillText: { fontSize: 11, fontWeight: '700' },
-  docRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl,
-    padding: 16, marginBottom: 10, ...Shadow.soft, gap: 12,
-  },
-  docIconCircle: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center',
-  },
-  docInfo: { flex: 1 },
-  docTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  docSub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  docActions: { flexDirection: 'row', gap: 8 },
-  docAction: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: Colors.bgPrimary, alignItems: 'center', justifyContent: 'center',
-  },
-  taskRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl,
-    padding: 16, marginBottom: 10, ...Shadow.soft, gap: 12,
-  },
-  taskIcon: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: Colors.accentLight, alignItems: 'center', justifyContent: 'center',
-  },
-  taskInfo: { flex: 1 },
-  taskTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  taskDue: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  aiCta: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.accent, borderRadius: Radius.xxl,
-    padding: 18, marginBottom: 16,
-  },
-  aiCtaLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  aiCtaIcon: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
-  },
-  aiCtaText: {},
-  aiCtaTitle: { fontSize: 16, fontWeight: '700', color: Colors.textInverse },
-  aiCtaSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-  emergencyBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#DC2626', borderRadius: Radius.xl,
-    padding: 14, marginBottom: 10,
-  },
-  emergencyIcon: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
-  },
-  emergencyTitle: { fontSize: 14, fontWeight: '700', color: '#FFF' },
-  emergencySub: { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
+  quickRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  quickCard: { flex: 1, backgroundColor: Colors.bgSecondary, borderRadius: Radius.xl, padding: 14, alignItems: 'center', gap: 8, ...Shadow.soft },
+  quickIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { fontSize: 11, fontWeight: '600', color: Colors.textPrimary },
 });

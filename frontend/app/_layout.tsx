@@ -19,6 +19,9 @@ export default function RootLayout() {
         <Stack.Screen name="lawyer-detail" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="case-detail" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="payment" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="language" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="documents" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

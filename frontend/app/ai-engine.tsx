@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Shadow } from '../src/utils/theme';
 import { api } from '../src/utils/api';
+import VoiceInput from '../src/components/VoiceInput';
 
 const TEMPLATES = [
   { icon: 'home-outline' as const, label: 'Property Dispute', text: 'I have a property dispute regarding ancestral land partition between family members. The property is located in Delhi and involves 3 siblings.' },
@@ -74,7 +75,10 @@ export default function AIEngineScreen() {
             </Text>
           </View>
 
-          {/* Input */}
+          {/* Voice Input - For people who can't type */}
+          <VoiceInput onResult={(voiceText) => setText(voiceText)} />
+
+          {/* Text Input */}
           <View style={styles.inputCard}>
             <TextInput
               testID="ai-text-input"

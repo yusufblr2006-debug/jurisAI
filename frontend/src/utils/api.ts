@@ -29,10 +29,10 @@ async function fetchJson(url: string, options?: RequestInit) {
 
 export const api = {
   // Auth
-  register: (name: string, email: string, password: string, role: string) =>
+  register: (name: string, email: string, password: string, role: string, extra: any = {}) =>
     fetchJson(`${apiBase}/auth/register`, {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role, ...extra }),
     }),
   login: (email: string, password: string) =>
     fetchJson(`${apiBase}/auth/login`, {

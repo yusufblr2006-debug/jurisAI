@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import VoiceInput from '../src/components/VoiceInput';
 import { Colors, Spacing, Radius, Shadow } from '../src/utils/theme';
 import ExpandableSection from '../src/components/ExpandableSection';
 import { api } from '../src/utils/api';
@@ -279,6 +280,7 @@ export default function ChatScreen() {
 
         {/* Input */}
         <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
+          <VoiceInput compact onResult={(voiceText) => setInput(voiceText)} />
           <TextInput
             style={styles.textInput}
             value={input}

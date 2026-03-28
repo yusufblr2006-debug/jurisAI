@@ -69,6 +69,10 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     role: str = "user"
+    bar_council_number: str = ""
+    enrollment_number: str = ""
+    aadhaar_last4: str = ""
+    specialization: str = ""
 
 class LoginRequest(BaseModel):
     email: str
@@ -485,6 +489,14 @@ async def register(data: RegisterRequest):
         "role": data.role, "phone": "",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+    # Add lawyer-specific credentials if registering as lawyer
+    if data.role == "lawyer":
+        user_doc["bar_council_number"] = data.bar_council_number
+        user_doc["enrollment_number"] = data.enrollment_number
+        user_doc["aadhaar_last4"] = data.aadhaar_last4
+        user_doc["specialization"] = data.specialization
+        user_doc["verification_status"] = "pending"  # Mock: auto-verify after 24h
+        user_doc["aadhaar_verified"] = True  # Mock: Aadhaar verification
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
     token = create_access_token(user_id, email)
