@@ -149,7 +149,7 @@ export default function LawyerDetailScreen() {
           <Text style={styles.feeLabel}>Consultation</Text>
           <Text style={styles.feeAmount}>Rs {lawyer.consultation_fee?.toLocaleString()}</Text>
         </View>
-        <TouchableOpacity testID="book-lawyer" style={styles.bookBtn} onPress={() => router.push('/chat' as any)}>
+        <TouchableOpacity testID="book-lawyer" style={styles.bookBtn} onPress={() => router.push({ pathname: '/payment', params: { lawyerName: lawyer.name, amount: String(lawyer.consultation_fee || 2000) } } as any)}>
           <Ionicons name="videocam" size={18} color="#FFF" />
           <Text style={styles.bookBtnText}>Book Consultation</Text>
         </TouchableOpacity>
