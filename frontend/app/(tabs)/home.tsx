@@ -69,8 +69,10 @@ export default function HomeScreen() {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.notifBadge}>
-              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
-              <View style={styles.notifDot} />
+              <TouchableOpacity testID="notif-btn" onPress={() => router.push('/notifications' as any)}>
+                <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+                <View style={styles.notifDot} />
+              </TouchableOpacity>
             </View>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>S</Text>
@@ -81,6 +83,20 @@ export default function HomeScreen() {
         {/* Greeting */}
         <Text style={styles.greetingSub}>Hello, User</Text>
         <Text style={styles.greetingMain}>{greeting}</Text>
+
+        {/* AI CTA Banner */}
+        <TouchableOpacity testID="ai-engine-cta" style={styles.aiCta} onPress={() => router.push('/ai-engine' as any)} activeOpacity={0.8}>
+          <View style={styles.aiCtaLeft}>
+            <View style={styles.aiCtaIcon}>
+              <Ionicons name="sparkles" size={22} color={Colors.textInverse} />
+            </View>
+            <View style={styles.aiCtaText}>
+              <Text style={styles.aiCtaTitle}>AI Legal Engine</Text>
+              <Text style={styles.aiCtaSub}>Get instant legal analysis</Text>
+            </View>
+          </View>
+          <Ionicons name="arrow-forward-circle" size={28} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
 
         {/* Tabs */}
         <View style={styles.tabRow}>
@@ -129,16 +145,16 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Other Cases</Text>
                 {cases.slice(1).map((c) => (
                   <View key={c.id} style={styles.caseRow}>
-                    <View style={[styles.caseIcon, { backgroundColor: c.risk_level === 'low' ? '#DCFCE7' : '#FEF3C7' }]}>
-                      <Ionicons name="document-text" size={18} color={c.risk_level === 'low' ? Colors.success : Colors.warning} />
+                    <View style={[styles.caseIcon, { backgroundColor: c.risk_level?.toUpperCase() === 'LOW' ? '#DCFCE7' : '#FEF3C7' }]}>
+                      <Ionicons name="document-text" size={18} color={c.risk_level?.toUpperCase() === 'LOW' ? Colors.success : Colors.warning} />
                     </View>
                     <View style={styles.caseInfo}>
                       <Text style={styles.caseTitle} numberOfLines={1}>{c.title}</Text>
                       <Text style={styles.caseSub}>{c.assigned_lawyer} • #{c.case_number}</Text>
                     </View>
-                    <View style={[styles.riskPill, { backgroundColor: c.risk_level === 'low' ? '#DCFCE7' : '#FEF3C7' }]}>
-                      <Text style={[styles.riskPillText, { color: c.risk_level === 'low' ? '#16A34A' : '#D97706' }]}>
-                        {c.risk_level.charAt(0).toUpperCase() + c.risk_level.slice(1)}
+                    <View style={[styles.riskPill, { backgroundColor: c.risk_level?.toUpperCase() === 'LOW' ? '#DCFCE7' : c.risk_level?.toUpperCase() === 'HIGH' ? '#FEE2E2' : '#FEF3C7' }]}>
+                      <Text style={[styles.riskPillText, { color: c.risk_level?.toUpperCase() === 'LOW' ? '#16A34A' : c.risk_level?.toUpperCase() === 'HIGH' ? '#DC2626' : '#D97706' }]}>
+                        {(c.risk_level || 'Medium').charAt(0).toUpperCase() + (c.risk_level || 'Medium').slice(1).toLowerCase()}
                       </Text>
                     </View>
                   </View>
@@ -321,4 +337,17 @@ const styles = StyleSheet.create({
   taskInfo: { flex: 1 },
   taskTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
   taskDue: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  aiCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.accent, borderRadius: Radius.xxl,
+    padding: 18, marginBottom: 16,
+  },
+  aiCtaLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  aiCtaIcon: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
+  },
+  aiCtaText: {},
+  aiCtaTitle: { fontSize: 16, fontWeight: '700', color: Colors.textInverse },
+  aiCtaSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
 });

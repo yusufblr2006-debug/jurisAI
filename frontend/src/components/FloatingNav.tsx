@@ -11,9 +11,10 @@ type TabItem = {
 
 const tabs: TabItem[] = [
   { name: 'home', icon: 'home-outline', iconActive: 'home' },
-  { name: 'ai', icon: 'sparkles-outline', iconActive: 'sparkles' },
+  { name: 'cases', icon: 'briefcase-outline', iconActive: 'briefcase' },
+  { name: 'community', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
   { name: 'lawyers', icon: 'people-outline', iconActive: 'people' },
-  { name: 'chat', icon: 'chatbubble-outline', iconActive: 'chatbubble' },
+  { name: 'profile', icon: 'person-outline', iconActive: 'person' },
 ];
 
 type Props = {
@@ -37,7 +38,7 @@ export default function FloatingNav({ activeTab, onTabPress }: Props) {
             >
               <Ionicons
                 name={isActive ? tab.iconActive : tab.icon}
-                size={24}
+                size={22}
                 color={Colors.textInverse}
               />
             </TouchableOpacity>
@@ -51,7 +52,7 @@ export default function FloatingNav({ activeTab, onTabPress }: Props) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 20,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -61,9 +62,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: Colors.navPill,
     borderRadius: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 4,
     ...Shadow.medium,
   },
   tabItem: {

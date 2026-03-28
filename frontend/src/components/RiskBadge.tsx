@@ -7,8 +7,9 @@ type Props = {
 };
 
 export default function RiskBadge({ level }: Props) {
-  const isLow = level === 'low';
-  const isHigh = level === 'high';
+  const normalLevel = (level || '').toLowerCase();
+  const isLow = normalLevel === 'low';
+  const isHigh = normalLevel === 'high';
   const bg = isLow ? '#DCFCE7' : isHigh ? '#FEE2E2' : '#FEF3C7';
   const color = isLow ? '#16A34A' : isHigh ? '#DC2626' : '#D97706';
   const label = isLow ? 'LOW RISK' : isHigh ? 'HIGH RISK' : 'MEDIUM RISK';

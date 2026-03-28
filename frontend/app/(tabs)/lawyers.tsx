@@ -9,10 +9,10 @@ import { Colors, Spacing, Radius, Shadow } from '../../src/utils/theme';
 import { api } from '../../src/utils/api';
 import FloatingNav from '../../src/components/FloatingNav';
 
-const TIER_COLORS: Record<string, { bg: string; text: string }> = {
-  Platinum: { bg: '#E0E7FF', text: '#4338CA' },
-  Gold: { bg: '#FEF3C7', text: '#D97706' },
-  Silver: { bg: '#F3F4F6', text: '#6B7280' },
+const TIER_MAP: Record<number, { label: string; bg: string; text: string }> = {
+  1: { label: 'Platinum', bg: '#E0E7FF', text: '#4338CA' },
+  2: { label: 'Gold', bg: '#FEF3C7', text: '#D97706' },
+  3: { label: 'Silver', bg: '#F3F4F6', text: '#6B7280' },
 };
 
 export default function LawyersScreen() {
@@ -26,12 +26,13 @@ export default function LawyersScreen() {
     api.getLawyers().then(setLawyers).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  const specialties = ['All', ...new Set(lawyers.map(l => l.specialty))];
+  const specialties = ['All', ...new Set(lawyers.flatMap(l => Array.isArray(l.specialty) ? l.specialty : [l.specialty]))];
 
   const filtered = lawyers.filter(l => {
+    const specStr = Array.isArray(l.specialty) ? l.specialty.join(', ') : l.specialty;
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.specialty.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'All' || l.specialty === filter;
+      specStr.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === 'All' || (Array.isArray(l.specialty) ? l.specialty.includes(filter) : l.specialty === filter);
     return matchSearch && matchFilter;
   });
 
@@ -80,7 +81,7 @@ export default function LawyersScreen() {
 
         {/* Lawyer Cards */}
         {filtered.map(lawyer => {
-          const tier = TIER_COLORS[lawyer.tier] || TIER_COLORS.Silver;
+          const tier = TIER_MAP[lawyer.tier] || TIER_MAP[3];
           return (
             <View key={lawyer.id} testID={`lawyer-card-${lawyer.id}`} style={styles.lawyerCard}>
               <View style={styles.lawyerTop}>
@@ -91,10 +92,10 @@ export default function LawyersScreen() {
                   <View style={styles.nameRow}>
                     <Text style={styles.lawyerName}>{lawyer.name}</Text>
                     <View style={[styles.tierBadge, { backgroundColor: tier.bg }]}>
-                      <Text style={[styles.tierText, { color: tier.text }]}>{lawyer.tier}</Text>
+                      <Text style={[styles.tierText, { color: tier.text }]}>{tier.label}</Text>
                     </View>
                   </View>
-                  <Text style={styles.lawyerSpecialty}>{lawyer.specialty}</Text>
+                  <Text style={styles.lawyerSpecialty}>{Array.isArray(lawyer.specialty) ? lawyer.specialty.join(' • ') : lawyer.specialty}</Text>
                   <View style={styles.statsRow}>
                     <View style={styles.stat}>
                       <Ionicons name="star" size={14} color="#F59E0B" />
